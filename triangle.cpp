@@ -1,4 +1,5 @@
 #include "vulkan/vulkan.h"
+#include "vulkan/vulkan_core.h"
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_vulkan.h"
 
@@ -6,6 +7,7 @@
 #include <stdexcept>
 #include <functional>
 #include <cstdlib>
+#include <vector>
 
 class HelloTriangleApplication {
 	
@@ -24,7 +26,7 @@ class HelloTriangleApplication {
 		VkInstance instance;
 
 		void initWindow() {
-			window = SDL_CreateWindow("Triangle", SDL_WINDOWPOS_UNDEFINED,  SDL_WINDOWPOS_UNDEFINED, 400, 400, SDL_WINDOW_OPENGL);
+			window = SDL_CreateWindow("Triangle", SDL_WINDOWPOS_UNDEFINED,  SDL_WINDOWPOS_UNDEFINED, 400, 400, SDL_WINDOW_VULKAN|SDL_WINDOW_SHOWN);
 			renderer = SDL_CreateRenderer(window, -1, 0);
 		}
 
@@ -64,9 +66,32 @@ class HelloTriangleApplication {
 			createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 			createInfo.pApplicationInfo = &appInfo;
 
-			unsigned int count;
+			unsigned int count = 0;
 			if(! SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr))
-				std::cerr << "Could not retrieve Vulkan Instance" << std::endl;
+				std::cerr << "Could not retrieve extensions count" << std::endl;
+
+      std::vector<const char*> extensions = {
+        VK_EXT_DEBUG_REPORT_EXTENSION_NAME 
+      };
+
+      size_t additional_extension_count = extensions.size();
+      extensions.resize(additional_extension_count + count);
+
+      if (!SDL_Vulkan_GetInstanceExtensions(window, &count, extensions.data() + additional_extension_count))
+				std::cerr << "Could not retrieve extended instance extensions" << std::endl;
+
+#ifdef DEBUG
+      std::cout << extensions.size() << " extensions loaded :" <<std::endl;
+      for(int i=0; i < extensions.size(); i++){
+        std::cout << extensions[i] <<std::endl;
+      }
+#endif
+      createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+      createInfo.ppEnabledExtensionNames = extensions.data();
+
+      if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
+        throw std::runtime_error("failed to create instance!");
+
 
 		}
 };

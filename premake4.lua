@@ -11,7 +11,9 @@ solution "Blanco_Tower"
 			defines {"DEBUG"}
 			flags {"Symbols"}
 			linkoptions{ "`sdl2-config --cflags --libs`"}
+      links{"vulkan"}
 
 		configuration "Release"
 			defines {"NDEBUG"}
 			flags {"Optimize"}
+			linkoptions{ "`sdl2-config --cflags --libs`"}
