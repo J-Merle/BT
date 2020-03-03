@@ -8,6 +8,7 @@
 #include <functional>
 #include <cstdlib>
 #include <vector>
+#include <algorithm>
 
 class HelloTriangleApplication {
 	
@@ -44,11 +45,10 @@ class HelloTriangleApplication {
 				SDL_RenderClear(renderer);
 				SDL_RenderPresent(renderer);
 			}
-
-			cleanup();
 		}
 
 		void cleanup() {
+      vkDestroyInstance(instance, nullptr);
 			SDL_DestroyRenderer(renderer);
 			SDL_DestroyWindow(window);
 		}
@@ -71,7 +71,7 @@ class HelloTriangleApplication {
 				std::cerr << "Could not retrieve extensions count" << std::endl;
 
       std::vector<const char*> extensions = {
-        VK_EXT_DEBUG_REPORT_EXTENSION_NAME 
+        VK_EXT_DEBUG_REPORT_EXTENSION_NAME
       };
 
       size_t additional_extension_count = extensions.size();
@@ -81,11 +81,25 @@ class HelloTriangleApplication {
 				std::cerr << "Could not retrieve extended instance extensions" << std::endl;
 
 #ifdef DEBUG
-      std::cout << extensions.size() << " extensions loaded :" <<std::endl;
-      for(int i=0; i < extensions.size(); i++){
-        std::cout << extensions[i] <<std::endl;
+      //  Find supported extensions
+      uint32_t extensionCount = 0;
+      vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+      std::vector<VkExtensionProperties> supportedExtensions(extensionCount);
+      vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, supportedExtensions.data());
+      std::cout << "Supported extensions" << std::endl;
+      for(auto &extension : supportedExtensions){
+        std::cout << "\t" << extension.extensionName << std::endl;
+      }
+      std::cout << std::endl;
+
+      // Just print the list of loaded extensions needed
+      std::cout << extensions.size() << " extensions needed :" <<std::endl;
+      for(auto &extension : extensions){
+        std::cout << "\t" << extension << std::endl;
       }
 #endif
+
+
       createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
       createInfo.ppEnabledExtensionNames = extensions.data();
 
