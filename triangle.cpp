@@ -8,8 +8,7 @@
 #include <functional>
 #include <cstdlib>
 #include <vector>
-#include <algorithm>
-
+#include <cstring>
 class HelloTriangleApplication {
 
   public:
@@ -81,21 +80,26 @@ class HelloTriangleApplication {
         std::cerr << "Could not retrieve extended instance extensions" << std::endl;
 
 #ifdef DEBUG
-      //  Find supported extensions
+      //  populate supported extensions
       uint32_t extensionCount = 0;
       vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
       std::vector<VkExtensionProperties> supportedExtensions(extensionCount);
       vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, supportedExtensions.data());
-      std::cout << "Supported extensions" << std::endl;
-      for(auto &extension : supportedExtensions){
-        std::cout << "\t" << extension.extensionName << std::endl;
-      }
-      std::cout << std::endl;
 
-      // Just print the list of loaded extensions needed
+      // Check for extension support
       std::cout << extensions.size() << " extensions needed :" <<std::endl;
       for(auto &extension : extensions){
-        std::cout << "\t" << extension << std::endl;
+        std::cout << "\t" << extension ;
+        bool found = false;
+        for(auto &supported : supportedExtensions) {
+          if(strcmp(extension, supported.extensionName) == 0) {
+            found = true;
+          }
+        }
+        if(!found) {
+          std::cout << " -> NOT SUPPORTED";
+        }
+        std::cout << std::endl;
       }
 #endif
 
